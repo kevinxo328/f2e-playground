@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="theme-color" content="#000000">
+    <title>React App</title>
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.development.js"></script>
+    <script type="text/javascript"
+        src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.development.js"></script>
+</head>
+
+<body>
+    <noscript>
+        You need to enable JavaScript to run this app.
+    </noscript>
+    <div id="root"></div>
+    <script type="text/babel">
+        const data = [
+            {
+                id: 1,
+                name: "Iron Man",
+                genre: "Action",
+                release_date: "2008-05-02",
+            },
+            {
+                id: 2,
+                name: "The Incredible Hulk",
+                genre: "Action",
+                release_date: "2008-06-13",
+            },
+            {
+                id: 3,
+                name: "Iron Man 2",
+                genre: "Action",
+                release_date: "2010-05-07",
+            },
+            {
+                id: 4,
+                name: "Thor",
+                genre: "Action",
+                release_date: "2011-05-06",
+            },
+            {
+                id: 5,
+                name: "Captain America: The First Avenger",
+                genre: "Action",
+                release_date: "2011-07-22",
+            },
+        ];
+
+        const SearchBox = React.forwardRef((props, ref) => {
+            return (
+                <input type="text" placeholder={props.placeholder} ref={ref} />
+            )
+        })
+
+        const App = () => {
+            const searchRef = React.useRef(null);
+            const isComposition = React.useRef(false);
+            const [movies, setMovies] = React.useState(data);
+            const delay = 500;
+
+            // debounce function is used to limit the number of times a function is called in a given time frame
+            const handleDebounce = (fn, delay) => {
+                let timer;
+                return function () {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => {
+                        fn.apply(this, arguments);
+                    }, delay);
+                }
+            }
+
+            const handleSearch = (keyword) => {
+                if (!keyword) {
+                    setMovies(data);
+                } else {
+                    setMovies(data.filter((movie) => movie.name.toLowerCase().includes(keyword.toLowerCase())));
+                }
+            }
+
+            React.useEffect(() => {
+                // compositionstart and compositionend events are used to detect when the user is typing in a non-latin script
+                // and prevent the search function from being called during this time
+                searchRef.current.addEventListener('compositionstart', () => {
+                    isComposition.current = true;
+                })
+
+                searchRef.current.addEventListener('compositionend', () => {
+                    isComposition.current = false;
+                    handleDebounce(handleSearch, delay)(searchRef.current.value);
+                })
+
+                searchRef.current.addEventListener('input', () => {
+                    if (isComposition.current) return;
+                    handleDebounce(handleSearch, delay)(searchRef.current.value);
+                })
+            }, [searchRef.current])
+
+            return (
+                <div>
+                    <h1 className="text-lg font-bold">
+                        前端輕鬆聊
+                    </h1>
+                    <SearchBox placeholder="Search movies" ref={searchRef} />
+                    <ul>
+                        {movies.map((movie) => (
+                            <li key={movie.id}>
+                                {movie.name} - {movie.genre} - {movie.release_date}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )
+        }
+
+        const container = document.getElementById('root');
+        ReactDOM.createRoot(container).render(<App />);       
+    </script>
+</body>
+
+</html>
