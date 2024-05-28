@@ -2,9 +2,9 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="theme-color" content="#000000">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="theme-color" content="#000000" />
     <title>React App</title>
     <script type="text/javascript"
         src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
@@ -15,9 +15,7 @@
 </head>
 
 <body>
-    <noscript>
-        You need to enable JavaScript to run this app.
-    </noscript>
+    <noscript> You need to enable JavaScript to run this app. </noscript>
     <div id="root"></div>
     <script type="text/babel">
         const data = [
@@ -55,9 +53,20 @@
 
         const SearchBox = React.forwardRef((props, ref) => {
             return (
-                <input type="text" placeholder={props.placeholder} ref={ref} />
-            )
-        })
+                <input
+                    type="text"
+                    placeholder={props.placeholder}
+                    ref={ref}
+                    onChange={(e) => props.onChange && props.onChange(e)}
+                    onCompositionStart={(e) =>
+                        props.onCompositionStart && props.onCompositionStart(e)
+                    }
+                    onCompositionEnd={(e) =>
+                        props.onCompositionEnd && props.onCompositionEnd(e)
+                    }
+                />
+            );
+        });
 
         const App = () => {
             const searchRef = React.useRef(null);
@@ -73,41 +82,66 @@
                     timer = setTimeout(() => {
                         fn.apply(this, arguments);
                     }, delay);
-                }
-            }
+                };
+            };
 
             const handleSearch = (keyword) => {
                 if (!keyword) {
                     setMovies(data);
                 } else {
-                    setMovies(data.filter((movie) => movie.name.toLowerCase().includes(keyword.toLowerCase())));
+                    setMovies(
+                        data.filter((movie) =>
+                            movie.name.toLowerCase().includes(keyword.toLowerCase())
+                        )
+                    );
                 }
-            }
+            };
 
-            React.useEffect(() => {
-                // compositionstart and compositionend events are used to detect when the user is typing in a non-latin script
-                // and prevent the search function from being called during this time
-                searchRef.current.addEventListener('compositionstart', () => {
+            const handleComposition = (e) => {
+                if (e.type !== "compositionend") {
                     isComposition.current = true;
-                })
-
-                searchRef.current.addEventListener('compositionend', () => {
+                } else {
                     isComposition.current = false;
-                    handleDebounce(handleSearch, delay)(searchRef.current.value);
-                })
+                }
+            };
 
-                searchRef.current.addEventListener('input', () => {
-                    if (isComposition.current) return;
-                    handleDebounce(handleSearch, delay)(searchRef.current.value);
-                })
-            }, [searchRef.current])
+            const handleChange = (e) => {
+                if (isComposition.current) return;
+                handleDebounce(handleSearch, delay)(e.target.value);
+            };
+
+            // React.useEffect(() => {
+            //     // compositionstart and compositionend events are used to detect when the user is typing in a non-latin script
+            //     // and prevent the search function from being called during this time
+            //     searchRef.current.addEventListener('compositionstart', () => {
+            //         isComposition.current = true;
+            //     })
+
+            //     searchRef.current.addEventListener('compositionend', () => {
+            //         isComposition.current = false;
+            //         handleDebounce(handleSearch, delay)(searchRef.current.value);
+            //     })
+
+            //     searchRef.current.addEventListener('input', () => {
+            //         if (isComposition.current) return;
+            //         handleDebounce(handleSearch, delay)(searchRef.current.value);
+            //     })
+            // }, [searchRef.current])
 
             return (
                 <div>
-                    <h1 className="text-lg font-bold">
-                        前端輕鬆聊
-                    </h1>
-                    <SearchBox placeholder="Search movies" ref={searchRef} />
+                    <h1 className="text-lg font-bold">前端輕鬆聊</h1>
+                    <SearchBox
+                        placeholder="Search movies"
+                        ref={searchRef}
+                        onChange={handleChange}
+                        onCompositionStart={handleComposition}
+                        onCompositionEnd={(e) => {
+                            handleComposition(e);
+                            handleSearch(searchRef.current.value);
+                        }}
+                        onCompositionUpdate={handleComposition}
+                    />
                     <ul>
                         {movies.map((movie) => (
                             <li key={movie.id}>
@@ -116,11 +150,11 @@
                         ))}
                     </ul>
                 </div>
-            )
-        }
+            );
+        };
 
-        const container = document.getElementById('root');
-        ReactDOM.createRoot(container).render(<App />);       
+        const container = document.getElementById("root");
+        ReactDOM.createRoot(container).render(<App />);
     </script>
 </body>
 
